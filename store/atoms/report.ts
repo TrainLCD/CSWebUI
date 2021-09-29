@@ -9,6 +9,7 @@ export type Report = {
   resolved: boolean;
   resolvedReason: string;
   updatedAt: Timestamp;
+  screenShotUrl?: string;
 };
 
 type ReportAtomState = {

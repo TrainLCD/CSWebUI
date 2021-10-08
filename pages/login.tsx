@@ -5,6 +5,7 @@ import { useRouter } from "next/router";
 import { FormEvent, useEffect, useState } from "react";
 import { useSetRecoilState } from "recoil";
 import styled from "styled-components";
+import media from "styled-media-query";
 import AppIcon from "../components/AppIcon";
 import ExclamationIcon from "../components/ExclamationIcon";
 import { auth } from "../lib/firebase";
@@ -22,15 +23,19 @@ const bgImg = BG_IMAGES[bgImgIndex];
 const Main = styled.main`
   width: 100vw;
   height: 100vh;
-  background-color: #212121;
-  background-image: url(${bgImg.src});
-  background-size: cover;
-  background-position: center;
+  ${media.greaterThan("small")`
+    background-color: #212121;
+    background-image: url(${bgImg.src});
+    background-size: cover;
+    background-position: center;
+  `}
 `;
 const BGOverlay = styled.div`
+  ${media.greaterThan("small")`
+    background: rgba(0, 0, 0, 0.75);
+  `}
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.75);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -39,13 +44,18 @@ const BGOverlay = styled.div`
 
 const FormPanel = styled.div<{ hasError: boolean }>`
   background-color: white;
-  max-width: 480px;
-  max-height: 640px;
   width: 100%;
-  height: ${({ hasError }) => (hasError ? "640px" : "572px")};
-  border-radius: 8px;
+  height: 100%;
+  max-height: 100%;
+  max-width: 100%;
   overflow: hidden;
   transition: height 0.2s ease-in-out;
+  ${media.greaterThan<{ hasError: boolean }>("small")`
+    max-width: 480px;
+    max-height: 640px;
+    height: ${({ hasError }) => (hasError ? "640px" : "572px")};
+    border-radius: 8px;
+  `}
 `;
 
 const FormHeader = styled.div`
@@ -83,7 +93,14 @@ const LogoContainer = styled.div`
 const Form = styled.form`
   display: flex;
   flex-direction: column;
-  padding: 48px 32px;
+  padding: 0 32px;
+  height: calc(100% - 180px);
+  align-items: center;
+  justify-content: center;
+  ${media.greaterThan("small")`
+    padding: 48px 32px;
+    height: auto;
+`}
 `;
 const InputLabel = styled.p`
   font-weight: bold;
@@ -100,16 +117,21 @@ const Input = styled.input`
   border: 1px solid #ccc;
   height: 48px;
   font-size: 1rem;
-  box-shadow: 0 0 4px rgba(0, 0, 0, 0.16);
   border-radius: 4px;
-  transition: box-shadow 0.2s ease-in-out;
   width: 100%;
   padding: 0 16px;
 
   :focus {
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.16);
     outline: none;
   }
+
+  ${media.greaterThan("small")`
+    box-shadow: 0 0 4px rgba(0, 0, 0, 0.16);
+    transition: box-shadow 0.2s ease-in-out;
+    :focus {
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.16);
+    }
+  `}
 `;
 
 const SubmitButton = styled.input`

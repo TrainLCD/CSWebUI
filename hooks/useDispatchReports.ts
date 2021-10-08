@@ -1,4 +1,5 @@
 import { collection, getDocs, query, where } from "@firebase/firestore";
+import { orderBy } from "firebase/firestore";
 import { useCallback, useEffect } from "react";
 import { useSetRecoilState } from "recoil";
 import { firestore } from "../lib/firebase";
@@ -8,7 +9,9 @@ const useDispatchReports = (withResolved?: boolean) => {
   const setReportState = useSetRecoilState(reportState);
   const fetchReportsAndSetStateAsync = useCallback(async () => {
     if (withResolved) {
-      const snapshot = await getDocs(collection(firestore, "reports"));
+      const snapshot = await getDocs(
+        query(collection(firestore, "reports"), orderBy("createdAt", "desc"))
+      );
       const docs = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
@@ -17,7 +20,11 @@ const useDispatchReports = (withResolved?: boolean) => {
       return;
     }
     const snapshot = await getDocs(
-      query(collection(firestore, "reports"), where("resolved", "==", false))
+      query(
+        collection(firestore, "reports"),
+        where("resolved", "==", false),
+        orderBy("createdAt", "desc")
+      )
     );
     const docs = snapshot.docs.map((doc) => ({
       id: doc.id,

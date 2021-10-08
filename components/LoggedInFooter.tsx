@@ -1,23 +1,26 @@
-import { signOut } from "@firebase/auth";
-import { useRecoilValue } from "recoil";
 import styled from "styled-components";
-import { auth } from "../lib/firebase";
-import authState from "../store/atoms/auth";
 
-const Footer = styled.footer``;
-const LoggedInUser = styled.p``;
-const LogoutLink = styled.p``;
+const Footer = styled.footer`
+  background-color: #212121;
+  height: 72px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+`;
+const Text = styled.p`
+  color: white;
+  font-weight: bold;
+  text-align: center;
+`;
 
 const LoggedInFooter = () => {
-  const authStateValue = useRecoilValue(authState);
-  const handleSignOut = () => signOut(auth);
-
   return (
     <Footer>
-      <LoggedInUser>
-        {authStateValue.currentUser?.email}でログイン中
-      </LoggedInUser>
-      <LogoutLink onClick={handleSignOut}>ログアウト</LogoutLink>
+      <Text>
+        Copyright © 2021 TrainLCD Team
+        <br />
+        このウェブサイトの一部または全部の転載を固く禁じます。
+      </Text>
     </Footer>
   );
 };

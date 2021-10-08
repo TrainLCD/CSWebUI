@@ -5,7 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import { firestore, storage } from "../lib/firebase";
 import { Report } from "../store/atoms/report";
 
-const useReport = (ticketId: string) => {
+const useReport = (ticketId?: string) => {
   const [report, setReport] = useState<Report | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -31,7 +31,7 @@ const useReport = (ticketId: string) => {
 
   const closeTicket = useCallback(
     async (reason: string) => {
-      if (!report) {
+      if (!report || !ticketId) {
         return;
       }
       const ticketRef = doc(firestore, "reports", ticketId);
@@ -51,7 +51,7 @@ const useReport = (ticketId: string) => {
     [report, ticketId]
   );
   const reopenTicket = useCallback(async () => {
-    if (!report) {
+    if (!report || !ticketId) {
       return;
     }
     const ticketRef = doc(firestore, "reports", ticketId);
@@ -70,7 +70,49 @@ const useReport = (ticketId: string) => {
     setReport({ ...report, resolved: false, resolvedReason: "" });
   }, [report, ticketId]);
 
-  return { report, loading, closeTicket, reopenTicket };
+  const closeTicketLazy = useCallback(
+    async (report: Report, reason: string) => {
+      const ticketRef = doc(firestore, "reports", report.id);
+      await runTransaction(firestore, async (transaction) => {
+        const ticketDoc = await transaction.get(ticketRef);
+        if (!ticketDoc.exists()) {
+          console.error("[useReport closeTicket]Document does not exist!");
+        }
+
+        transaction.update(ticketRef, {
+          resolved: true,
+          resolvedReason: reason,
+        });
+      });
+      return { ...report, resolved: true, resolvedReason: reason };
+    },
+    []
+  );
+  const reopenTicketLazy = useCallback(async (report: Report) => {
+    const ticketRef = doc(firestore, "reports", report.id);
+    await runTransaction(firestore, async (transaction) => {
+      const ticketDoc = await transaction.get(ticketRef);
+      if (!ticketDoc.exists()) {
+        console.error("[useReport reopenTicket]Document does not exist!");
+      }
+
+      transaction.update(ticketRef, {
+        resolved: false,
+        resolvedReason: "",
+      });
+    });
+
+    return { ...report, resolved: false, resolvedReason: "" };
+  }, []);
+
+  return {
+    report,
+    loading,
+    closeTicket,
+    reopenTicket,
+    closeTicketLazy,
+    reopenTicketLazy,
+  };
 };
 
 export default useReport;

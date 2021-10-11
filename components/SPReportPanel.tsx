@@ -1,4 +1,5 @@
 import dayjs from "dayjs";
+import Link from "next/link";
 import { ChangeEvent, useEffect, useState } from "react";
 import styled from "styled-components";
 import { Report } from "../store/atoms/report";
@@ -78,7 +79,9 @@ const SPReportPanel = ({ report, onCheckChange, disabledReportId }: Props) => {
             onChange={handleChange}
           />
         </CheckboxContainer>
-        <Description>{description}</Description>
+        <Link passHref href={`/reports/${report.id}`}>
+          <Description>{description}</Description>
+        </Link>
       </Left>
       <Right>
         <ReportDate>

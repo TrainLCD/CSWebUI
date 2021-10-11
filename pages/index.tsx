@@ -1,14 +1,17 @@
 import { signOut } from "@firebase/auth";
 import dayjs from "dayjs";
-import type { NextPage } from "next";
+import { NextPage } from "next";
 import Head from "next/head";
 import Link from "next/link";
 import React, { useState } from "react";
+import { BrowserView, MobileView } from "react-device-detect";
 import { useRecoilState, useRecoilValue } from "recoil";
 import styled from "styled-components";
+import media from "styled-media-query";
 import CheckIcon from "../components/CheckIcon";
 import LoggedInFooter from "../components/LoggedInFooter";
 import LogoutIcon from "../components/LogoutIcon";
+import SPReportPanel from "../components/SPReportPanel";
 import StatusTag from "../components/StatusTag";
 import UndoIcon from "../components/UndoIcon";
 import useDispatchReports from "../hooks/useDispatchReports";
@@ -23,8 +26,11 @@ const Container = styled.div`
   min-height: 100vh;
 `;
 const Main = styled.main`
-  min-height: calc(100vh - 72px);
-  margin-bottom: 32px; ;
+  min-height: calc(100vh - 48px);
+  ${media.greaterThan("small")`
+    min-height: calc(100vh - 72px);
+    margin-bottom: 32px;
+  `}
 `;
 
 const Header = styled.header`
@@ -33,7 +39,10 @@ const Header = styled.header`
   align-items: center;
   color: white;
   height: 96px;
-  padding: 0 32px;
+  padding: 0 24px;
+  ${media.greaterThan("small")`
+    padding: 0 32px;
+  `};
   justify-content: space-around;
 `;
 const LeftContainer = styled.div``;
@@ -65,17 +74,29 @@ const LogoutButton = styled.button`
 
 const SubHeader = styled.div`
   background-color: white;
+  position: relative;
+  z-index: 1;
   box-shadow: 0 4px 4px rgba(0, 0, 0, 0.16);
   display: flex;
   justify-content: center;
+  height: 64px;
+  ${media.greaterThan("small")`
+    height:96px;
+  `}
 `;
 const SubHeaderInner = styled.div`
   max-width: 960px;
   width: 100%;
   display: flex;
+  padding: 0 24px;
+  ${media.greaterThan("small")`
+    padding: 0 32px;
+  `};
   align-items: center;
 `;
-const Title = styled.h2``;
+const Title = styled.h2`
+  margin: 0;
+`;
 
 const WithResolvedCheckboxContainer = styled.div`
   margin-left: 100px;
@@ -89,7 +110,7 @@ const WithResolvedCheckboxText = styled.p`
 const ReportTableContainer = styled.div`
   display: flex;
   justify-content: center;
-  margin-top: 32px; ;
+  margin-top: 32px;
 `;
 const ReportTable = styled.table`
   background-color: white;
@@ -140,6 +161,7 @@ const ReportTableTDButton = styled.button`
   background: none;
   border: none;
   cursor: pointer;
+  opacity: ${({ disabled }) => (disabled ? 0.5 : 1)};
 `;
 const StatusTagText = styled.p`
   color: white;
@@ -152,6 +174,7 @@ const Home: NextPage = () => {
   const [reportStateValue, setReportStateValue] = useRecoilState(reportState);
   const [withResolved, setWithResolved] = useState(false);
   const authStateValue = useRecoilValue(authState);
+  const [loadingReportId, setLoadingReportId] = useState<string | null>(null);
 
   // TODO: ログアウト確認を出す
   const handleLogout = () => signOut(auth);
@@ -167,20 +190,36 @@ const Home: NextPage = () => {
     setWithResolved(e.target.checked);
 
   const handleUndo = async (report: Report) => {
-    const reopenedTicket = await reopenTicketLazy(report);
-    setReportStateValue((prev) => ({
-      ...prev,
-      reports: prev.reports.map((r) =>
-        r.id === report.id ? reopenedTicket : r
-      ),
-    }));
+    setLoadingReportId(report.id);
+    try {
+      const reopenedTicket = await reopenTicketLazy(report);
+      setReportStateValue((prev) => ({
+        ...prev,
+        reports: prev.reports.map((r) =>
+          r.id === report.id ? reopenedTicket : r
+        ),
+      }));
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingReportId(null);
+    }
   };
   const handleResolve = async (report: Report) => {
-    const closedTicket = await closeTicketLazy(report, "クイック解決");
-    setReportStateValue((prev) => ({
-      ...prev,
-      reports: prev.reports.map((r) => (r.id === report.id ? closedTicket : r)),
-    }));
+    setLoadingReportId(report.id);
+    try {
+      const closedTicket = await closeTicketLazy(report, "クイック解決");
+      setReportStateValue((prev) => ({
+        ...prev,
+        reports: prev.reports.map((r) =>
+          r.id === report.id ? closedTicket : r
+        ),
+      }));
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingReportId(null);
+    }
   };
 
   const renderReports = () => {
@@ -207,6 +246,7 @@ const Home: NextPage = () => {
           </ReportTableTD>
           <ReportTableTD key={report.id}>
             <ReportTableTDButton
+              disabled={loadingReportId === report.id}
               onClick={() =>
                 report.resolved ? handleUndo(report) : handleResolve(report)
               }
@@ -247,7 +287,9 @@ const Home: NextPage = () => {
             </AppNameContainer>
           </LeftContainer>
           <RightContainer>
-            <EmailText>{authStateValue.currentUser?.email}</EmailText>
+            <BrowserView>
+              <EmailText>{authStateValue.currentUser?.email}</EmailText>
+            </BrowserView>
             <LogoutButton onClick={handleLogout}>
               <LogoutIcon />
             </LogoutButton>
@@ -268,27 +310,42 @@ const Home: NextPage = () => {
             </WithResolvedCheckboxContainer>
           </SubHeaderInner>
         </SubHeader>
-        <ReportTableContainer>
-          <ReportTable>
-            <ReportTableHeader>
-              <ReportTableRow>
-                <ReportTableTH>
-                  <ReportTableTHText>タイトル</ReportTableTHText>
-                </ReportTableTH>
-                <ReportTableTH>
-                  <ReportTableTHText>ステータス</ReportTableTHText>
-                </ReportTableTH>
-                <ReportTableTH>
-                  <ReportTableTHText>アクション</ReportTableTHText>
-                </ReportTableTH>
-                <ReportTableTH>
-                  <ReportTableTHText>経過日数</ReportTableTHText>
-                </ReportTableTH>
-              </ReportTableRow>
-            </ReportTableHeader>
-            <ReportTableBody>{renderReports()}</ReportTableBody>
-          </ReportTable>
-        </ReportTableContainer>
+        <BrowserView>
+          <ReportTableContainer>
+            <ReportTable>
+              <ReportTableHeader>
+                <ReportTableRow>
+                  <ReportTableTH>
+                    <ReportTableTHText>タイトル</ReportTableTHText>
+                  </ReportTableTH>
+                  <ReportTableTH>
+                    <ReportTableTHText>ステータス</ReportTableTHText>
+                  </ReportTableTH>
+                  <ReportTableTH>
+                    <ReportTableTHText>アクション</ReportTableTHText>
+                  </ReportTableTH>
+                  <ReportTableTH>
+                    <ReportTableTHText>経過日数</ReportTableTHText>
+                  </ReportTableTH>
+                </ReportTableRow>
+              </ReportTableHeader>
+              <ReportTableBody>{renderReports()}</ReportTableBody>
+            </ReportTable>
+          </ReportTableContainer>
+        </BrowserView>
+
+        <MobileView>
+          {reports.map((r) => (
+            <SPReportPanel
+              key={r.id}
+              disabledReportId={loadingReportId}
+              onCheckChange={() =>
+                r.resolved ? handleUndo(r) : handleResolve(r)
+              }
+              report={r}
+            />
+          ))}
+        </MobileView>
       </Main>
 
       <LoggedInFooter />

@@ -45,6 +45,7 @@ const Checkbox = styled.input<{ checked: boolean; disabled: boolean }>`
 
 const Description = styled.p`
   font-weight: bold;
+  flex: 1;
 `;
 
 const ReportDate = styled.p`

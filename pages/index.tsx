@@ -104,7 +104,7 @@ const WithResolvedCheckboxContainer = styled.div`
   align-items: center;
 `;
 const WithResolvedCheckbox = styled.input``;
-const WithResolvedCheckboxText = styled.p`
+const WithResolvedCheckboxLabel = styled.label`
   margin-left: 8px;
 `;
 const ReportTableContainer = styled.div`
@@ -301,12 +301,14 @@ const Home: NextPage = () => {
             <WithResolvedCheckboxContainer>
               <WithResolvedCheckbox
                 type="checkbox"
+                id="withResolved"
+                name="withResolved"
                 checked={withResolved}
                 onChange={handleWithResolvedChange}
               />
-              <WithResolvedCheckboxText>
+              <WithResolvedCheckboxLabel htmlFor="withResolved">
                 解決済みも含む
-              </WithResolvedCheckboxText>
+              </WithResolvedCheckboxLabel>
             </WithResolvedCheckboxContainer>
           </SubHeaderInner>
         </SubHeader>

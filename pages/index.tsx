@@ -145,7 +145,7 @@ const ReportTableTD = styled.td`
   padding: 0 32px;
   height: 72px;
 `;
-const ReportTableTDText = styled.p`
+const ReportTableTDInner = styled.div`
   font-weight: bold;
   margin: 0;
   text-align: left;
@@ -231,20 +231,22 @@ const Home: NextPage = () => {
       return (
         <ReportTableRow key={report.id}>
           <ReportTableTD>
-            <ReportTableTDText>
-              <Link href={`/reports/${report.id}`}>{report.description}</Link>
-            </ReportTableTDText>
+            <ReportTableTDInner>
+              <Link href={`/reports/${report.id}`}>
+                {report.description || "boo boo"}
+              </Link>
+            </ReportTableTDInner>
           </ReportTableTD>
-          <ReportTableTD key={report.id}>
-            <ReportTableTDText>
+          <ReportTableTD>
+            <ReportTableTDInner>
               <StatusTag resolved={report.resolved}>
                 <StatusTagText>
                   {report.resolved ? "解決済" : "未解決"}
                 </StatusTagText>
               </StatusTag>
-            </ReportTableTDText>
+            </ReportTableTDInner>
           </ReportTableTD>
-          <ReportTableTD key={report.id}>
+          <ReportTableTD>
             <ReportTableTDButton
               disabled={loadingReportId === report.id}
               onClick={() =>
@@ -254,7 +256,7 @@ const Home: NextPage = () => {
               {report.resolved ? <UndoIcon /> : <CheckIcon />}
             </ReportTableTDButton>
           </ReportTableTD>
-          <ReportTableTD key={report.id}>
+          <ReportTableTD>
             <ReportTableTDDate>
               {dayjs(new Date()).diff(report.createdAt.toDate(), "days")}日
             </ReportTableTDDate>
